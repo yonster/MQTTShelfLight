@@ -1,7 +1,7 @@
 #include "Light.h"
 
 /*
-  Light.cpp - drives Neopixel gravity object
+  Light.cpp - drives Neopixel object
   Created by Ian Steyaert, Dec 13, 2015.
   Released into the public domain.
 
@@ -13,39 +13,12 @@
 
   getRGB() function based on <http://www.codeproject.com/miscctrl/CPicker.asp>
   dim_curve idea by Jims <http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1174674545>
-
-  created 05-01-2010 by kasperkamperman.com
 */
-
-/*
-  dim_curve 'lookup table' to compensate for the nonlinearity of human vision.
-  Used in the getRGB function on saturation and brightness to make 'dimming' look more natural.
-  Exponential function used to create values below :
-  x from 0 - 255 : y = round(pow( 2.0, x+64/40.0) - 1)
-*/
-
-const byte dim_curve[] = {
-    0,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   3,   3,
-    3,   3,   3,   3,   3,   3,   3,   4,   4,   4,   4,   4,   4,   4,   4,   4,
-    4,   4,   4,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   6,   6,   6,
-    6,   6,   6,   6,   6,   7,   7,   7,   7,   7,   7,   7,   8,   8,   8,   8,
-    8,   8,   9,   9,   9,   9,   9,   9,   10,  10,  10,  10,  10,  11,  11,  11,
-    11,  11,  12,  12,  12,  12,  12,  13,  13,  13,  13,  14,  14,  14,  14,  15,
-    15,  15,  16,  16,  16,  16,  17,  17,  17,  18,  18,  18,  19,  19,  19,  20,
-    20,  20,  21,  21,  22,  22,  22,  23,  23,  24,  24,  25,  25,  25,  26,  26,
-    27,  27,  28,  28,  29,  29,  30,  30,  31,  32,  32,  33,  33,  34,  35,  35,
-    36,  36,  37,  38,  38,  39,  40,  40,  41,  42,  43,  43,  44,  45,  46,  47,
-    48,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,
-    63,  64,  65,  66,  68,  69,  70,  71,  73,  74,  75,  76,  78,  79,  81,  82,
-    83,  85,  86,  88,  90,  91,  93,  94,  96,  98,  99,  101, 103, 105, 107, 109,
-    110, 112, 114, 116, 118, 121, 123, 125, 127, 129, 132, 134, 136, 139, 141, 144,
-    146, 149, 151, 154, 157, 159, 162, 165, 168, 171, 174, 177, 180, 183, 186, 190,
-    193, 196, 200, 203, 207, 211, 214, 218, 222, 226, 230, 234, 238, 242, 248, 255,
-};
 
 Light::Light() {
 }
 
+//void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor) {
 void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor, GeneralMessageFunction callback) {
   _startPixel = startPixel;
   _endPixel = endPixel;
@@ -54,6 +27,7 @@ void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString
   _callback = callback;
   _lightIDString= lightIDString;
 }
+
 
 void Light::updateValues() {
   getRGB(_hue, _saturation, _value, _rgb_colors);   // converts HSB to RGB
@@ -69,17 +43,14 @@ void Light::updateValues() {
   }
 
   // set updated status
-  _callback(String(_lightIDString) + ":ON:" + String(_status));
-  _callback(String(_lightIDString) + ":VAL:" + String(_value));
-  _callback(String(_lightIDString) + ":HUE:" + String(_hue));
-  _callback(String(_lightIDString) + ":SAT:" + String(_saturation));
+  _callback(String(_lightIDString)+":"+String(_status)+":"+String(_value)+":"+String(_hue)+":"+String(_saturation));
 }
 
 void Light::processMessage(char *message) {
-  // messages will come in as:
-  // ID: FXN: VAL
-  // Light ID (00-99): Function (ON|OFF|HUE|SAT|VAL): Value (0-1000)
-  // eg. 01: HUE: 320
+  // message commands come in as:
+  // ID:FXN:VAL
+  // Light ID (00-99): Function (ON|OFF|HUE|SAT|VAL): Value (0-360)
+  // eg. 01:HUE:320
 
   if (strncmp(message, _lightIDString, 2) == 0) {   // compare first 2 chars to lightID
     // if matches our ID, process request
@@ -90,8 +61,9 @@ void Light::processMessage(char *message) {
     } else if (messageString.substring(3,6) == "OFF") {
       _status = "OFF";
     } else if (messageString.substring(3,9) == "CHECKSTATUS") {
-//      light("ON_UPDATE");
+      // null command to get a status returned
     } else if (messageString.substring(3,11) == "IDENTIFY") {
+      // identify the light by blinking green a few times
       for (int j=0; j<4; j++) {
         for(int i=_startPixel;i<=_endPixel;i++) {
           _setPixelColor(i, 0, 255, 0);
@@ -112,12 +84,18 @@ void Light::processMessage(char *message) {
         _value = value * 255/100;
       }
     }
+    // if this light responded to the message, update status
+    updateValues();
   }
-  updateValues();
 }
 
 void Light::toggle() {
-  
+  if (_status == "ON") {
+    _status = "OFF";
+  } else {
+    _status = "ON";
+  }
+  updateValues();
 }
 
 

@@ -82,6 +82,12 @@ void Light::processMessage(char *message) {
         _saturation = value * 255/100;
       } else if (messageString.substring(3,6) == "VAL") {
         _value = value * 255/100;
+      } else if (messageString.substring(3,6) == "DIM") {
+        _value -= 1;
+        if (_value < 0) _value = 0;
+      } else if (messageString.substring(3,9) == "BRIGHT") {
+        _value += 1;
+        if (_value > 100) _value = 100;
       }
     }
     // if this light responded to the message, update status

@@ -12,6 +12,7 @@
 #define WLAN_SSID       "ATTuNvpygs"
 #define WLAN_PASS       "f4hee83p6qir"
 #include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 
 /************************* MQTT Setup *********************************/
 
@@ -26,7 +27,6 @@
   #include <avr/power.h>
 #endif
 
-
 class Utilities {
   public:
     Utilities();
@@ -35,7 +35,16 @@ class Utilities {
 //    void MQTT_publish(String message);
 //    void update();
 //    void addMQTTObject(Object object);
+    void timeUpdate();
+    void timeCheckup();
+    unsigned long sendNTPpacket(IPAddress& address);
   private:
+    unsigned int localPort = 2390;      // local port to listen for UDP packets
+    IPAddress timeServerIP; // time.nist.gov NTP server address
+    const char* ntpServerName = "time.nist.gov";
+
+    // A UDP instance to let us send and receive packets over UDP
+    WiFiUDP udp;
 };
 
 #endif

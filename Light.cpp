@@ -30,7 +30,7 @@ void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString
 
 
 void Light::updateValues() {
-  getRGB(_hue, _saturation, _value, _rgb_colors);   // converts HSB to RGB
+  getRGB(_hue, _saturation, value, _rgb_colors);   // converts HSB to RGB
 
   if (_status == "ON") {
     for(int i=_startPixel;i<=_endPixel;i++) {
@@ -43,7 +43,7 @@ void Light::updateValues() {
   }
 
   // set updated status
-  _callback(String(_lightIDString)+":"+String(_status)+":"+String(_value)+":"+String(_hue)+":"+String(_saturation));
+  _callback(String(_lightIDString)+":"+String(_status)+":"+String(value)+":"+String(_hue)+":"+String(_saturation));
 }
 
 void Light::processMessage(char *message) {
@@ -75,19 +75,19 @@ void Light::processMessage(char *message) {
         delay(500);
       }
     } else {
-      int value = atoi(&message[7]);
+      int _value = atoi(&message[7]);
       if (messageString.substring(3,6) == "HUE") {
-        _hue = value;
+        _hue = _value;
       } else if (messageString.substring(3,6) == "SAT") {
-        _saturation = value * 255/100;
+        _saturation = _value * 255/100;
       } else if (messageString.substring(3,6) == "VAL") {
-        _value = value * 255/100;
+        value = _value * 255/100;
       } else if (messageString.substring(3,6) == "DIM") {
-        _value -= 1;
-        if (_value < 0) _value = 0;
+        value -= 4;
+        if (value < 0) value = 0;
       } else if (messageString.substring(3,9) == "BRIGHT") {
-        _value += 1;
-        if (_value > 100) _value = 100;
+        value += 4;
+        if (value > 255) value = 255;
       }
     }
     // if this light responded to the message, update status
@@ -102,6 +102,31 @@ void Light::toggle() {
     _status = "ON";
   }
   updateValues();
+}
+
+
+//Theatre-style crawling lights with rainbow effect
+void Light::theaterChaseRainbow(int j, int q) {
+//  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+//    for (int q=0; q < 3; q++) {
+      for (uint16_t i=_startPixel; i < _endPixel; i=i+3) {
+        byte WheelPos = 255 - (i+j) % 255;
+        if (WheelPos < 85) {
+          _setPixelColor(i+q, 255 - WheelPos * 3, 0, WheelPos * 3);
+        } else if (WheelPos < 170) {
+          WheelPos -= 85;
+          _setPixelColor(i+q, 0, WheelPos * 3, 255 - WheelPos * 3);
+        } else {
+          WheelPos -= 170;
+          _setPixelColor(i+q, WheelPos * 3, 255 - WheelPos * 3, 0);
+        }
+      }
+
+//      for (uint16_t i=_startPixel; i < _endPixel; i=i+3) {
+//        _setPixelColor(i+q, 0);        //turn every third pixel off
+//      }
+//    }
+//  }
 }
 
 

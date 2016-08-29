@@ -44,9 +44,10 @@ class Light : public Object {
 //    void setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor);
     void setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor, GeneralMessageFunction callback);
     virtual void processMessage(char *message);
+    void theaterChaseRainbow(int j, int q);
     void updateValues();
     void toggle();
-    int _value = 0;
+    int value = 0;
   private:
     int _startPixel = 0;
     int _endPixel = 0;

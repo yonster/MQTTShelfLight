@@ -1,6 +1,5 @@
 #include "Utilities.h"
 #include "Light.h"
-#include "Button.h"
 #include <Adafruit_NeoPixel.h>
 
 
@@ -10,26 +9,17 @@ Adafruit_MQTT_Publish statusFeed = Adafruit_MQTT_Publish(&mqtt, "steyaertHome/ma
 Adafruit_MQTT_Subscribe controlFeed = Adafruit_MQTT_Subscribe(&mqtt, "steyaertHome/masterBedroom/lightsControl");
 
 
-// Change these two numbers to the pins connected to your encoder.
-//   Best Performance: both pins have interrupt capability
-//   Good Performance: only the first pin has interrupt capability
-//   Low Performance:  neither pin has interrupt capability
-// Encoder myEnc(5, 6);
-//long oldEncoderPosition  = -999;
-
-
 // pinouts availbale 0 2 4 5 12 13 14 15 16
 #define NEOPIXEL_PIN   12
 #define NUMPIXELS      59
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-// int timerTicks = 0;               // count ticks for interrupt timer
+long timerTicks = 0;               // count ticks for interrupt timer
+bool startingUp = true;            // initiates startup sequence
 
 // create objects
 #define LIGHT_COUNT 3
 Light light[LIGHT_COUNT];
-#define BUTTON_COUNT 2
-Button button[BUTTON_COUNT];
 Utilities utilities;
 
 
@@ -52,26 +42,8 @@ void setup() {
   light[1].setup(20, 38, 1, "02", setPixelColor, MQTT_publish);
   light[2].setup(39, 58, 2, "03", setPixelColor, MQTT_publish);
 
-  // set up pushbuttons
-  button[0].setup(4, 0, buttonPress);
-  button[1].setup(5, 2, buttonPress);
-
-  // rotaryEncoder.setup();
-
   pixels.begin();  // This initializes the NeoPixel library.
   pixels.show();   // Initialize all pixels to 'off'
-}
-
-
-void buttonPress(bool value) {
-  if (value) {
-    setPixelColor(1, 200, 200, 200);
-    Serial.println("on");
-  } else {
-    setPixelColor(1, 0, 0, 0);
-    Serial.println("off");
-  }
-  pixels.show();
 }
 
 
@@ -88,18 +60,7 @@ void loop() {
   mqtt.processPackets(20);
 
 //  utilities.update();
-  // updateInterrupts();     // allow interrupt timer to run
-
-  // update pushbuttons
-  for (int buttonID = 0; buttonID < BUTTON_COUNT; buttonID++) {
-    button[buttonID].update();
-  }
-
-//  long newPosition = myEnc.read();
-//  if (newPosition != oldEncoderPosition) {
-//    oldEncoderPosition = newPosition;
-//    Serial.println(newPosition);
-//  }
+  updateInterrupts();     // allow interrupt timer to run
 }
 
 
@@ -112,17 +73,29 @@ void controlCallback(char *data, uint16_t len) {
 }
 
 
-/* if we need to add multi-threading later...
 void updateInterrupts() {
-  if (timerTicks++ > 2001) {
-    timerTicks = 0;
-    timerTicks = 0;
-  } else if (timerTicks % 100 == 0) {
-    light[0].update();
-    light[1].update();
+  if (light[2].value == 1) {
+    // if third light at 1%, show time
+    if (timerTicks++ > 10001) {
+      // new NTP request every 10 seconds
+      utilities.timeUpdate();
+      timerTicks = 0;
+    } else if (timerTicks % 1000 == 0) {
+      // check for a NTP response every second if needed
+      utilities.timeCheckup();
+    }
+  } else if ((startingUp) || (light[1].value == 4)) {
+    // show startup sequence
+    for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+      for (int q=0; q < 3; q++) {
+        light[2].theaterChaseRainbow(j, q);
+        pixels.show();
+        delay(5);
+     }
+    }
+    startingUp = false;
   }
 }
-*/
 
 
 void MQTT_publish (String message) {

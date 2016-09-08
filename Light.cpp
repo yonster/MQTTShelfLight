@@ -26,11 +26,32 @@ void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString
   _setPixelColor = setPixelColor;
   _callback = callback;
   _lightIDString= lightIDString;
+
+  for {i=_startPixel; i<= _endPixel; i++) {
+    hueCurrent[i] = 0;
+    satCurrent[i] = 0;
+    valCurrent[i] = 0;
+    hueTarget[i] = 0;
+    satTarget[i] = 0;
+    valTarget[i] = 0;
+  }
 }
 
 
 void Light::updateValues() {
-  getRGB(_hue, _saturation, value, _rgb_colors);   // converts HSB to RGB
+
+  /// need to fix this:
+  if (updateRequired) {
+    for(int i=_startPixel;i<=_endPixel;i++) {
+      if (hueTarget[i] - hueCurrent[i] > 0) {
+        // update
+      } else {
+        updateRequired = false;
+      }
+    }
+  }
+
+  getRGB(hue, saturation, value, _rgb_colors);   // converts HSB to RGB
 
   if (_status == "ON") {
     for(int i=_startPixel;i<=_endPixel;i++) {
@@ -43,7 +64,32 @@ void Light::updateValues() {
   }
 
   // set updated status
-  _callback(String(_lightIDString)+":"+String(_status)+":"+String(value)+":"+String(_hue)+":"+String(_saturation));
+  _callback(String(_lightIDString)+":"+String(_status)+":"+String(value)+":"+String(hue)+":"+String(saturation));
+}
+
+void Light::updateTime() {
+  // update time display
+
+  // time hours
+  for(int i=_startPixel;i<=_startPixel + 12;i++) {
+    // for 12 pixels, color them dark red, except current hour
+    if (i == hour()) {
+      _setPixelColor(i, 0, 1, 0);
+    } else {
+      _setPixelColor(i, 1, 0, 0);
+    }
+  }
+
+  // time minutes
+  for(int i=_endPixel - 4;i<=_endPixel;i++) {
+    // for 4 pixels, color them dark red, except current minute
+    if (i == minute()) {
+      _setPixelColor(i, 0, 1, 0);
+    } else {
+      _setPixelColor(i, 1, 0, 0);
+    }
+  }
+  updateValues();
 }
 
 void Light::processMessage(char *message) {
@@ -75,13 +121,13 @@ void Light::processMessage(char *message) {
         delay(500);
       }
     } else {
-      int _value = atoi(&message[7]);
+      int value = atoi(&message[7]);
       if (messageString.substring(3,6) == "HUE") {
-        _hue = _value;
+        hue = value;
       } else if (messageString.substring(3,6) == "SAT") {
-        _saturation = _value * 255/100;
+        saturation = value * 255/100;
       } else if (messageString.substring(3,6) == "VAL") {
-        value = _value * 255/100;
+        value = value * 255/100;
       } else if (messageString.substring(3,6) == "DIM") {
         value -= 4;
         if (value < 0) value = 0;
@@ -130,63 +176,63 @@ void Light::theaterChaseRainbow(int j, int q) {
 }
 
 
-void Light::getRGB(int hue, int sat, int val, int colors[3]) {
-  /* convert hue, saturation and brightness ( HSB/HSV ) to RGB
+void Light::getRGB(int _hue, int _sat, int _val, int colors[3]) {
+  /* convert _hue, saturation and brightness ( HSB/HSV ) to RGB
      The dim_curve is used only on brightness/value and on saturation (inverted).
      This looks the most natural.
   */
 
-  val = dim_curve[val];
-  sat = 255-dim_curve[255-sat];
+  _val = dim_curve[_val];
+  _sat = 255-dim_curve[255-_sat];
 
   int r;
   int g;
   int b;
   int base;
 
-  if (sat == 0) { // Acromatic color (gray). Hue doesn't mind.
-    colors[0]=val;
-    colors[1]=val;
-    colors[2]=val;
+  if (_sat == 0) { // Acromatic color (gray). Hue doesn't mind.
+    colors[0]=_val;
+    colors[1]=_val;
+    colors[2]=_val;
   } else  {
 
-    base = ((255 - sat) * val)>>8;
+    base = ((255 - _sat) * _val)>>8;
 
-    switch(hue/60) {
+    switch(_hue/60) {
   case 0:
-    r = val;
-    g = (((val-base)*hue)/60)+base;
+    r = _val;
+    g = (((_val-base)*_hue)/60)+base;
     b = base;
   break;
 
   case 1:
-    r = (((val-base)*(60-(hue%60)))/60)+base;
-    g = val;
+    r = (((_val-base)*(60-(_hue%60)))/60)+base;
+    g = _val;
     b = base;
   break;
 
   case 2:
     r = base;
-    g = val;
-    b = (((val-base)*(hue%60))/60)+base;
+    g = _val;
+    b = (((_val-base)*(_hue%60))/60)+base;
   break;
 
   case 3:
     r = base;
-    g = (((val-base)*(60-(hue%60)))/60)+base;
-    b = val;
+    g = (((_val-base)*(60-(_hue%60)))/60)+base;
+    b = _val;
   break;
 
   case 4:
-    r = (((val-base)*(hue%60))/60)+base;
+    r = (((_val-base)*(_hue%60))/60)+base;
     g = base;
-    b = val;
+    b = _val;
   break;
 
   case 5:
-    r = val;
+    r = _val;
     g = base;
-    b = (((val-base)*(60-(hue%60)))/60)+base;
+    b = (((_val-base)*(60-(_hue%60)))/60)+base;
   break;
     }
 

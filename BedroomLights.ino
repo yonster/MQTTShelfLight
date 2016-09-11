@@ -1,5 +1,6 @@
 #include "Utilities.h"
 #include "Light.h"
+#include "Button.h"
 #include <Adafruit_NeoPixel.h>
 
 WiFiClient client;
@@ -8,17 +9,26 @@ Adafruit_MQTT_Publish statusFeed = Adafruit_MQTT_Publish(&mqtt, "steyaertHome/ma
 Adafruit_MQTT_Subscribe controlFeed = Adafruit_MQTT_Subscribe(&mqtt, "steyaertHome/masterBedroom/lightsControl");
 
 
+// Change these two numbers to the pins connected to your encoder.
+//   Best Performance: both pins have interrupt capability
+//   Good Performance: only the first pin has interrupt capability
+//   Low Performance:  neither pin has interrupt capability
+// Encoder myEnc(5, 6);
+//long oldEncoderPosition  = -999;
+
+
 // pinouts availbale 0 2 4 5 12 13 14 15 16
 #define NEOPIXEL_PIN   12
 #define NUMPIXELS      59
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-long timerTicks = 0;               // count ticks for interrupt timer
-bool startingUp = true;            // initiates startup sequence
+// int timerTicks = 0;               // count ticks for interrupt timer
 
 // create objects
 #define LIGHT_COUNT 3
 Light light[LIGHT_COUNT];
+#define BUTTON_COUNT 2
+Button button[BUTTON_COUNT];
 Utilities utilities;
 
 // TIME
@@ -52,6 +62,12 @@ void setup() {
   light[1].setup(20, 38, 1, "02", setPixelColor, MQTT_publish);
   light[2].setup(39, 58, 2, "03", setPixelColor, MQTT_publish);
 
+  // set up pushbuttons
+  button[0].setup(4, 0, buttonPress);
+  button[1].setup(5, 2, buttonPress);
+
+  // rotaryEncoder.setup();
+
   pixels.begin();  // This initializes the NeoPixel library.
   pixels.show();   // Initialize all pixels to 'off'
 
@@ -63,6 +79,18 @@ void setup() {
   Serial.println(Udp.localPort());
   Serial.println("waiting for sync");
   setSyncProvider(getNtpTime);
+}
+
+
+void buttonPress(bool value) {
+  if (value) {
+    setPixelColor(1, 200, 200, 200);
+    Serial.println("on");
+  } else {
+    setPixelColor(1, 0, 0, 0);
+    Serial.println("off");
+  }
+  pixels.show();
 }
 
 
@@ -79,9 +107,24 @@ void loop() {
   mqtt.processPackets(20);
 
 //  utilities.update();
+<<<<<<< HEAD
   updateInterrupts();     // allow interrupt timer to run
 
   delay(20);  // try to save battery but keep responsiveness? *** TODO: Tweak this to maximum delay while keeping responsiveness
+=======
+  // updateInterrupts();     // allow interrupt timer to run
+
+  // update pushbuttons
+  for (int buttonID = 0; buttonID < BUTTON_COUNT; buttonID++) {
+    button[buttonID].update();
+  }
+
+//  long newPosition = myEnc.read();
+//  if (newPosition != oldEncoderPosition) {
+//    oldEncoderPosition = newPosition;
+//    Serial.println(newPosition);
+//  }
+>>>>>>> parent of 2234290... Better dimming, clean-up, added time
 }
 
 
@@ -94,6 +137,7 @@ void controlCallback(char *data, uint16_t len) {
 }
 
 
+<<<<<<< HEAD
 void updateInterrupts() { 
   if (light[2].value > -1) {  // temp override
     // if third light at 1%, show time
@@ -131,8 +175,19 @@ void runSequence(char *sequenceName) {
     light[2].hue = 100; // blue?
     light[2].saturation = 100;
     light[2].value = 100;
+=======
+/* if we need to add multi-threading later...
+void updateInterrupts() {
+  if (timerTicks++ > 2001) {
+    timerTicks = 0;
+    timerTicks = 0;
+  } else if (timerTicks % 100 == 0) {
+    light[0].update();
+    light[1].update();
+>>>>>>> parent of 2234290... Better dimming, clean-up, added time
   }
 }
+*/
 
 
 void MQTT_publish (String message) {

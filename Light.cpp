@@ -39,6 +39,7 @@ void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString
 
 
 void Light::updateValues() {
+<<<<<<< HEAD
 
   /// need to fix this:
   if (updateRequired) {
@@ -52,6 +53,9 @@ void Light::updateValues() {
   }
 
   getRGB(hue, saturation, value, _rgb_colors);   // converts HSB to RGB
+=======
+  getRGB(_hue, _saturation, _value, _rgb_colors);   // converts HSB to RGB
+>>>>>>> parent of 2234290... Better dimming, clean-up, added time
 
   if (_status == "ON") {
     for(int i=_startPixel;i<=_endPixel;i++) {
@@ -64,6 +68,7 @@ void Light::updateValues() {
   }
 
   // set updated status
+<<<<<<< HEAD
   _callback(String(_lightIDString)+":"+String(_status)+":"+String(value)+":"+String(hue)+":"+String(saturation));
 }
 
@@ -90,6 +95,9 @@ void Light::updateTime() {
     }
   }
   updateValues();
+=======
+  _callback(String(_lightIDString)+":"+String(_status)+":"+String(_value)+":"+String(_hue)+":"+String(_saturation));
+>>>>>>> parent of 2234290... Better dimming, clean-up, added time
 }
 
 void Light::processMessage(char *message) {
@@ -123,17 +131,25 @@ void Light::processMessage(char *message) {
     } else {
       int value = atoi(&message[7]);
       if (messageString.substring(3,6) == "HUE") {
+<<<<<<< HEAD
         hue = value;
       } else if (messageString.substring(3,6) == "SAT") {
         saturation = value * 255/100;
       } else if (messageString.substring(3,6) == "VAL") {
         value = value * 255/100;
+=======
+        _hue = value;
+      } else if (messageString.substring(3,6) == "SAT") {
+        _saturation = value * 255/100;
+      } else if (messageString.substring(3,6) == "VAL") {
+        _value = value * 255/100;
+>>>>>>> parent of 2234290... Better dimming, clean-up, added time
       } else if (messageString.substring(3,6) == "DIM") {
-        value -= 4;
-        if (value < 0) value = 0;
+        _value -= 1;
+        if (_value < 0) _value = 0;
       } else if (messageString.substring(3,9) == "BRIGHT") {
-        value += 4;
-        if (value > 255) value = 255;
+        _value += 1;
+        if (_value > 100) _value = 100;
       }
     }
     // if this light responded to the message, update status
@@ -151,6 +167,7 @@ void Light::toggle() {
 }
 
 
+<<<<<<< HEAD
 //Theatre-style crawling lights with rainbow effect
 void Light::theaterChaseRainbow(int j, int q) {
 //  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
@@ -178,6 +195,10 @@ void Light::theaterChaseRainbow(int j, int q) {
 
 void Light::getRGB(int _hue, int _sat, int _val, int colors[3]) {
   /* convert _hue, saturation and brightness ( HSB/HSV ) to RGB
+=======
+void Light::getRGB(int hue, int sat, int val, int colors[3]) {
+  /* convert hue, saturation and brightness ( HSB/HSV ) to RGB
+>>>>>>> parent of 2234290... Better dimming, clean-up, added time
      The dim_curve is used only on brightness/value and on saturation (inverted).
      This looks the most natural.
   */

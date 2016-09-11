@@ -34,6 +34,7 @@
   #include <avr/power.h>
 #endif
 
+
 class Utilities {
   public:
     Utilities();
@@ -42,10 +43,13 @@ class Utilities {
 //    void MQTT_publish(String message);
 //    void update();
 //    void addMQTTObject(Object object);
+<<<<<<< HEAD
     void loop();
 //    float getTime();
     void digitalClockDisplay();
     void printDigits(int digits);
+=======
+>>>>>>> parent of 2234290... Better dimming, clean-up, added time
   private:
 };
 

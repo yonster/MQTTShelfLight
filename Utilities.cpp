@@ -4,7 +4,6 @@
 Utilities::Utilities() {
 }
 
-
 void Utilities::setup() {
   // Subscribe to these from Terminal with e.g.:
   // mosquitto_sub -h 192.168.1.65 -d -t steyaertHome/masterBedroom/lightsStatus
@@ -38,6 +37,7 @@ void Utilities::setup() {
 ////  bedroomLightsControlFeed.setCallback(object.tempCallback);
 //  Serial.println("added");
 //}
+<<<<<<< HEAD
 
 void Utilities::loop() {
 //  if (timeStatus() != timeNotSet) {
@@ -76,3 +76,5 @@ void Utilities::printDigits(int digits) {
     Serial.print('0');
   Serial.print(digits);
 }
+=======
+>>>>>>> parent of 2234290... Better dimming, clean-up, added time

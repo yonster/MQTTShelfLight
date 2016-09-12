@@ -7,6 +7,13 @@
 #include "Arduino.h"
 #include "Object.h"
 
+
+/************************* Time *********************************/
+
+#include <SPI.h>
+#include <Wire.h>
+#include <TimeLib.h> 
+
 /************************* WiFi Access Point *********************************/
 
 #define WLAN_SSID       "ATTuNvpygs"
@@ -36,13 +43,13 @@ class Utilities {
 //    void update();
 //    void addMQTTObject(Object object);
     void timeUpdate();
-    void timeCheckup();
-    unsigned long sendNTPpacket(IPAddress& address);
   private:
     unsigned int localPort = 2390;      // local port to listen for UDP packets
     IPAddress timeServerIP; // time.nist.gov NTP server address
     const char* ntpServerName = "time.nist.gov";
-
+    void digitalClockDisplay();
+    void printDigits(int digits);
+    
     // A UDP instance to let us send and receive packets over UDP
     WiFiUDP udp;
 };

@@ -31,7 +31,7 @@ void Utilities::setup() {
 //  udp.begin(localPort);
 //  Serial.print("Local port: ");
 //  Serial.println(udp.localPort());
-
+}
 
 //void Utilities::update() {
 //}
@@ -43,6 +43,7 @@ void Utilities::setup() {
 ////  bedroomLightsControlFeed.setCallback(object.tempCallback);
 //  Serial.println("added");
 //}
+
 void Utilities::timeUpdate() {
 //  if (timeStatus() != timeNotSet) {
 //    if (now() != prevDisplay) { //update the display only if time has changed

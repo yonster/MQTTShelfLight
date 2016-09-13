@@ -38,6 +38,7 @@ void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString
 //  }
 }
 
+void Light::updateValues() {
   /// need to fix this:
 //  if (updateRequired) {
 //    for(int i=_startPixel;i<=_endPixel;i++) {
@@ -73,8 +74,10 @@ void Light::updateTime() {
     _setPixelColor(i, 0, 0, 0);
   }
 
-
 	// time hours
+ int currentHour = hour();
+ if (currentHour > 12) { currentHour =- 12; }
+ 
   for(int i=0;i<=11;i++) {
     // for 12 pixels, color them dark red, except current hour
     if (i == currentHour - 1) {
@@ -85,7 +88,7 @@ void Light::updateTime() {
   }
 
   // time minutes
-  _callback(String(_lightIDString)+":"+String(_status)+":"+String(_value)+":"+String(_hue)+":"+String(_saturation));
+//  _callback(String(_lightIDString)+":"+String(_status)+":"+String(_value)+":"+String(_hue)+":"+String(_saturation));
   int currentQuarter = 3 - floor(minute()/15);  // calculate current quarter hour 0 -> 3, reversed
   
   for(int i=0;i<=3;i++) {

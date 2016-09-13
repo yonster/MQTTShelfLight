@@ -24,16 +24,13 @@ void Utilities::setup() {
 
   Serial.println("WiFi connected");
   Serial.println("IP address: "); Serial.println(WiFi.localIP());
-<<<<<<< HEAD
-=======
+
 
   // UDP startup
 //  Serial.println("Starting UDP");
 //  udp.begin(localPort);
 //  Serial.print("Local port: ");
 //  Serial.println(udp.localPort());
->>>>>>> add-timeDisplay
-}
 
 
 //void Utilities::update() {
@@ -46,14 +43,7 @@ void Utilities::setup() {
 ////  bedroomLightsControlFeed.setCallback(object.tempCallback);
 //  Serial.println("added");
 //}
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-void Utilities::loop() {
-=======
-
 void Utilities::timeUpdate() {
->>>>>>> add-timeDisplay
 //  if (timeStatus() != timeNotSet) {
 //    if (now() != prevDisplay) { //update the display only if time has changed
 //      prevDisplay = now();
@@ -62,15 +52,11 @@ void Utilities::timeUpdate() {
 //  }
 }
 
-<<<<<<< HEAD
-
 //float Utilities::getTime() {
 //  // returns time as HH.MMM (minutes as decimal)
 //  return hour() + (minute() / 60);
 //}
 
-=======
->>>>>>> add-timeDisplay
 void Utilities::digitalClockDisplay() {
   // digital clock display of the time
   Serial.print(hour());
@@ -85,10 +71,6 @@ void Utilities::digitalClockDisplay() {
   Serial.println(); 
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> add-timeDisplay
 void Utilities::printDigits(int digits) {
   // utility for digital clock display: prints preceding colon and leading 0
   Serial.print(":");
@@ -96,5 +78,3 @@ void Utilities::printDigits(int digits) {
     Serial.print('0');
   Serial.print(digits);
 }
-=======
->>>>>>> parent of 2234290... Better dimming, clean-up, added time

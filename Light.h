@@ -46,28 +46,14 @@ class Light : public Object {
 //    void setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor);
     void setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor, GeneralMessageFunction callback);
     virtual void processMessage(char *message);
-<<<<<<< HEAD
     void theaterChaseRainbow(int j, int q);
-<<<<<<< HEAD
     void updateTime();
     void toggle();
     int hue = 0;
     int saturation = 0;
     int value = 0;
-=======
     void updateValues();
-    void toggle();
-    int _value = 0;
->>>>>>> parent of 2234290... Better dimming, clean-up, added time
-=======
     void riseToRed(int j);
-    void updateValues();
-    void updateTime();
-    void toggle();
-    int hue = 2;
-    int saturation = 100;
-    int value = 30;
->>>>>>> add-timeDisplay
   private:
     int hueCurrent[maxPixels];
     int satCurrent[maxPixels];
@@ -76,11 +62,6 @@ class Light : public Object {
     int satTarget[maxPixels];
     int valTarget[maxPixels];
     bool updateRequired = true;
-<<<<<<< HEAD
-
-    void updateValues();
-=======
->>>>>>> add-timeDisplay
     int _startPixel = 0;
     int _endPixel = 0;
     int _lightID;

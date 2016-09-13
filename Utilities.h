@@ -8,12 +8,20 @@
 #include "Object.h"
 
 
+<<<<<<< HEAD
 // Time
 #include <SPI.h>
 #include <Wire.h>
 #include <TimeLib.h> 
 #include <WiFiUdp.h>
 
+=======
+/************************* Time *********************************/
+
+#include <SPI.h>
+#include <Wire.h>
+#include <TimeLib.h> 
+>>>>>>> add-timeDisplay
 
 /************************* WiFi Access Point *********************************/
 
@@ -44,6 +52,7 @@ class Utilities {
 //    void update();
 //    void addMQTTObject(Object object);
 <<<<<<< HEAD
+<<<<<<< HEAD
     void loop();
 //    float getTime();
     void digitalClockDisplay();
@@ -51,6 +60,18 @@ class Utilities {
 =======
 >>>>>>> parent of 2234290... Better dimming, clean-up, added time
   private:
+=======
+    void timeUpdate();
+  private:
+    unsigned int localPort = 2390;      // local port to listen for UDP packets
+    IPAddress timeServerIP; // time.nist.gov NTP server address
+    const char* ntpServerName = "time.nist.gov";
+    void digitalClockDisplay();
+    void printDigits(int digits);
+    
+    // A UDP instance to let us send and receive packets over UDP
+    WiFiUDP udp;
+>>>>>>> add-timeDisplay
 };
 
 #endif

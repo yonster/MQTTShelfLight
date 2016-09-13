@@ -24,6 +24,15 @@ void Utilities::setup() {
 
   Serial.println("WiFi connected");
   Serial.println("IP address: "); Serial.println(WiFi.localIP());
+<<<<<<< HEAD
+=======
+
+  // UDP startup
+//  Serial.println("Starting UDP");
+//  udp.begin(localPort);
+//  Serial.print("Local port: ");
+//  Serial.println(udp.localPort());
+>>>>>>> add-timeDisplay
 }
 
 
@@ -38,8 +47,13 @@ void Utilities::setup() {
 //  Serial.println("added");
 //}
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 void Utilities::loop() {
+=======
+
+void Utilities::timeUpdate() {
+>>>>>>> add-timeDisplay
 //  if (timeStatus() != timeNotSet) {
 //    if (now() != prevDisplay) { //update the display only if time has changed
 //      prevDisplay = now();
@@ -48,12 +62,15 @@ void Utilities::loop() {
 //  }
 }
 
+<<<<<<< HEAD
 
 //float Utilities::getTime() {
 //  // returns time as HH.MMM (minutes as decimal)
 //  return hour() + (minute() / 60);
 //}
 
+=======
+>>>>>>> add-timeDisplay
 void Utilities::digitalClockDisplay() {
   // digital clock display of the time
   Serial.print(hour());
@@ -68,7 +85,10 @@ void Utilities::digitalClockDisplay() {
   Serial.println(); 
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> add-timeDisplay
 void Utilities::printDigits(int digits) {
   // utility for digital clock display: prints preceding colon and leading 0
   Serial.print(":");

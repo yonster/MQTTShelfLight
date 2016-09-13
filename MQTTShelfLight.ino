@@ -1,7 +1,7 @@
 #include "Utilities.h"
 #include "Light.h"
-#include "Button.h"
 #include <Adafruit_NeoPixel.h>
+
 
 WiFiClient client;
 Adafruit_MQTT_Client mqtt(&client, MQTT_SERVER, MQTT_PORT, MQTT_USERNAME, MQTT_PASSWORD);
@@ -9,26 +9,18 @@ Adafruit_MQTT_Publish statusFeed = Adafruit_MQTT_Publish(&mqtt, "steyaertHome/ma
 Adafruit_MQTT_Subscribe controlFeed = Adafruit_MQTT_Subscribe(&mqtt, "steyaertHome/masterBedroom/lightsControl");
 
 
-// Change these two numbers to the pins connected to your encoder.
-//   Best Performance: both pins have interrupt capability
-//   Good Performance: only the first pin has interrupt capability
-//   Low Performance:  neither pin has interrupt capability
-// Encoder myEnc(5, 6);
-//long oldEncoderPosition  = -999;
-
-
 // pinouts availbale 0 2 4 5 12 13 14 15 16
 #define NEOPIXEL_PIN   12
 #define NUMPIXELS      59
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-// int timerTicks = 0;               // count ticks for interrupt timer
+long timerTicks = 0;               // count ticks for interrupt timer
+bool startingUp = true;            // initiates startup sequence
+bool clockMode = false;
 
 // create objects
 #define LIGHT_COUNT 3
 Light light[LIGHT_COUNT];
-#define BUTTON_COUNT 2
-Button button[BUTTON_COUNT];
 Utilities utilities;
 
 // TIME
@@ -42,18 +34,17 @@ WiFiUDP Udp;
 unsigned int localPort = 8888;  // local port to listen for UDP packets
 //time_t prevDisplay = 0; // when the digital clock was displayed
 
-
 void setup() {
   utilities.setup();
-  
+
   controlFeed.setCallback(controlCallback);
-  
+
   // Setup MQTT subscription for time feed.
   mqtt.subscribe(&controlFeed);
   MQTT_connect();
 
   controlFeed.setCallback(controlCallback);
-  
+
   // Setup MQTT subscription
   mqtt.subscribe(&controlFeed);
 
@@ -61,12 +52,6 @@ void setup() {
   light[0].setup( 0, 19, 0, "01", setPixelColor, MQTT_publish);
   light[1].setup(20, 38, 1, "02", setPixelColor, MQTT_publish);
   light[2].setup(39, 58, 2, "03", setPixelColor, MQTT_publish);
-
-  // set up pushbuttons
-  button[0].setup(4, 0, buttonPress);
-  button[1].setup(5, 2, buttonPress);
-
-  // rotaryEncoder.setup();
 
   pixels.begin();  // This initializes the NeoPixel library.
   pixels.show();   // Initialize all pixels to 'off'
@@ -79,18 +64,7 @@ void setup() {
   Serial.println(Udp.localPort());
   Serial.println("waiting for sync");
   setSyncProvider(getNtpTime);
-}
-
-
-void buttonPress(bool value) {
-  if (value) {
-    setPixelColor(1, 200, 200, 200);
-    Serial.println("on");
-  } else {
-    setPixelColor(1, 0, 0, 0);
-    Serial.println("off");
-  }
-  pixels.show();
+  Serial.println("setup complete");
 }
 
 
@@ -107,87 +81,58 @@ void loop() {
   mqtt.processPackets(20);
 
 //  utilities.update();
-<<<<<<< HEAD
   updateInterrupts();     // allow interrupt timer to run
+//  Serial.println("updated interrupts");
 
-  delay(20);  // try to save battery but keep responsiveness? *** TODO: Tweak this to maximum delay while keeping responsiveness
-=======
-  // updateInterrupts();     // allow interrupt timer to run
-
-  // update pushbuttons
-  for (int buttonID = 0; buttonID < BUTTON_COUNT; buttonID++) {
-    button[buttonID].update();
-  }
-
-//  long newPosition = myEnc.read();
-//  if (newPosition != oldEncoderPosition) {
-//    oldEncoderPosition = newPosition;
-//    Serial.println(newPosition);
-//  }
->>>>>>> parent of 2234290... Better dimming, clean-up, added time
+//  delay(20);  // try to save battery but keep responsiveness? *** TODO: Tweak this to maximum delay while keeping responsiveness
 }
 
 
 void controlCallback(char *data, uint16_t len) {
   Serial.print("Received: ");
   Serial.println(data);
+  if (data == "CLOCK") { clockMode = true; }
+  
   for (int i = 0; i < LIGHT_COUNT; i++) {
     light[i].processMessage(data);
   }
 }
 
 
-<<<<<<< HEAD
-void updateInterrupts() { 
-  if (light[2].value > -1) {  // temp override
+void updateInterrupts() {
+  if (startingUp) {
+    // show startup sequence
+    for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+      for (int q=0; q < 3; q++) {
+        light[0].theaterChaseRainbow(j, q);
+        light[1].theaterChaseRainbow(j, q);
+        light[2].theaterChaseRainbow(j, q);
+        pixels.show();
+        delay(10);
+      }
+    }
+
+    // now show red
+    for (int j=0; j < 30; j++) {     // increase brightness
+      light[0].riseToRed(j);
+      light[1].riseToRed(j);
+      light[2].riseToRed(j);
+      pixels.show();
+      delay(30);
+    }
+    startingUp = false;
+  } else if ((light[2].value < 10) || (clockMode)) {
     // if third light at 1%, show time
     if (timerTicks++ > 1001) {
       // new NTP request every ~30 seconds
-      Serial.println("update");
+      Serial.println("updating time");
       light[2].updateTime();
-      utilities.loop();
+      utilities.timeUpdate();
       timerTicks = 0;
+      pixels.show();
     }
-  } else if ((startingUp) || (light[1].value == 4)) {
-    // show startup sequence
-    runSequence("rainbow");
-    startingUp = false;
   }
 }
-
-
-void runSequence(char *sequenceName) {
-  if (sequenceName == "rainbow") {
-    for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-      for (int q=0; q < 3; q++) {
-        light[2].theaterChaseRainbow(j, q);
-        pixels.show();
-        delay(5);
-      }
-    }
-  } else if (sequenceName == "morning") {
-    light[2].hue = 2; // red
-    light[2].saturation = 100;
-    light[2].value = 0;
-    // now set this value
-    // *** TODO: get the transition to delay slowly: Create a transition method?
-    // end point
-    light[2].hue = 100; // blue?
-    light[2].saturation = 100;
-    light[2].value = 100;
-=======
-/* if we need to add multi-threading later...
-void updateInterrupts() {
-  if (timerTicks++ > 2001) {
-    timerTicks = 0;
-    timerTicks = 0;
-  } else if (timerTicks % 100 == 0) {
-    light[0].update();
-    light[1].update();
->>>>>>> parent of 2234290... Better dimming, clean-up, added time
-  }
-}
-*/
 
 
 void MQTT_publish (String message) {
@@ -257,6 +202,7 @@ time_t getNtpTime() {
   return 0; // return 0 if unable to get the time
 }
 
+
 // send an NTP request to the time server at the given address
 void sendNTPpacket(IPAddress &address) {
   // set all bytes in the buffer to 0
@@ -273,7 +219,7 @@ void sendNTPpacket(IPAddress &address) {
   packetBuffer[14]  = 49;
   packetBuffer[15]  = 52;
   // all NTP fields have been given values, now
-  // you can send a packet requesting a timestamp:                 
+  // you can send a packet requesting a timestamp:
   Udp.beginPacket(address, 123); //NTP requests are to port 123
   Udp.write(packetBuffer, NTP_PACKET_SIZE);
   Udp.endPacket();

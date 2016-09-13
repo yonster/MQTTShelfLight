@@ -27,6 +27,7 @@ void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString
   _callback = callback;
   _lightIDString= lightIDString;
 
+<<<<<<< HEAD
   for {i=_startPixel; i<= _endPixel; i++) {
     hueCurrent[i] = 0;
     satCurrent[i] = 0;
@@ -35,10 +36,21 @@ void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString
     satTarget[i] = 0;
     valTarget[i] = 0;
   }
+=======
+//  for {i=_startPixel; i<= _endPixel; i++) {
+//    hueCurrent[i] = 0;
+//    satCurrent[i] = 0;
+//    valCurrent[i] = 0;
+//    hueTarget[i] = 0;
+//    satTarget[i] = 0;
+//    valTarget[i] = 0;
+//  }
+>>>>>>> add-timeDisplay
 }
 
 
 void Light::updateValues() {
+<<<<<<< HEAD
 <<<<<<< HEAD
 
   /// need to fix this:
@@ -56,6 +68,21 @@ void Light::updateValues() {
 =======
   getRGB(_hue, _saturation, _value, _rgb_colors);   // converts HSB to RGB
 >>>>>>> parent of 2234290... Better dimming, clean-up, added time
+=======
+
+  /// need to fix this:
+//  if (updateRequired) {
+//    for(int i=_startPixel;i<=_endPixel;i++) {
+//      if (hueTarget[i] - hueCurrent[i] > 0) {
+//        // update
+//      } else {
+//        updateRequired = false;
+//      }
+//    }
+//  }
+
+  getRGB(hue, saturation, value, _rgb_colors);   // converts HSB to RGB
+>>>>>>> add-timeDisplay
 
   if (_status == "ON") {
     for(int i=_startPixel;i<=_endPixel;i++) {
@@ -69,6 +96,9 @@ void Light::updateValues() {
 
   // set updated status
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> add-timeDisplay
   _callback(String(_lightIDString)+":"+String(_status)+":"+String(value)+":"+String(hue)+":"+String(saturation));
 }
 
@@ -76,16 +106,35 @@ void Light::updateTime() {
   // update time display
 
   // time hours
+<<<<<<< HEAD
   for(int i=_startPixel;i<=_startPixel + 12;i++) {
     // for 12 pixels, color them dark red, except current hour
     if (i == hour()) {
       _setPixelColor(i, 0, 1, 0);
     } else {
       _setPixelColor(i, 1, 0, 0);
+=======
+  int currentHour = hour();
+  if (currentHour > 12) { currentHour = currentHour - 12; }
+
+  // turn off all LEDs
+  for(int i=_startPixel; i<=_endPixel; i++) {
+    _setPixelColor(i, 0, 0, 0);
+  }
+
+
+  for(int i=0;i<=11;i++) {
+    // for 12 pixels, color them dark red, except current hour
+    if (i == currentHour - 1) {
+      _setPixelColor(_endPixel - i, 2, 1, 0);
+    } else {
+      _setPixelColor(_endPixel - i, 1, 0, 0);
+>>>>>>> add-timeDisplay
     }
   }
 
   // time minutes
+<<<<<<< HEAD
   for(int i=_endPixel - 4;i<=_endPixel;i++) {
     // for 4 pixels, color them dark red, except current minute
     if (i == minute()) {
@@ -98,6 +147,18 @@ void Light::updateTime() {
 =======
   _callback(String(_lightIDString)+":"+String(_status)+":"+String(_value)+":"+String(_hue)+":"+String(_saturation));
 >>>>>>> parent of 2234290... Better dimming, clean-up, added time
+=======
+  int currentQuarter = 3 - floor(minute()/15);  // calculate current quarter hour 0 -> 3, reversed
+  
+  for(int i=0;i<=3;i++) {
+    // for 4 pixels, color them dark red, except current minute
+    if (i == currentQuarter) {
+      _setPixelColor(_startPixel + i, 2, 1, 0);
+    } else {
+      _setPixelColor(_startPixel + i, 1, 0, 0);
+    }
+  }
+>>>>>>> add-timeDisplay
 }
 
 void Light::processMessage(char *message) {
@@ -132,6 +193,7 @@ void Light::processMessage(char *message) {
       int value = atoi(&message[7]);
       if (messageString.substring(3,6) == "HUE") {
 <<<<<<< HEAD
+<<<<<<< HEAD
         hue = value;
       } else if (messageString.substring(3,6) == "SAT") {
         saturation = value * 255/100;
@@ -141,6 +203,11 @@ void Light::processMessage(char *message) {
         _hue = value;
       } else if (messageString.substring(3,6) == "SAT") {
         _saturation = value * 255/100;
+=======
+        hue = _value;
+      } else if (messageString.substring(3,6) == "SAT") {
+        saturation = _value * 255/100;
+>>>>>>> add-timeDisplay
       } else if (messageString.substring(3,6) == "VAL") {
         _value = value * 255/100;
 >>>>>>> parent of 2234290... Better dimming, clean-up, added time
@@ -170,33 +237,42 @@ void Light::toggle() {
 <<<<<<< HEAD
 //Theatre-style crawling lights with rainbow effect
 void Light::theaterChaseRainbow(int j, int q) {
-//  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-//    for (int q=0; q < 3; q++) {
-      for (uint16_t i=_startPixel; i < _endPixel; i=i+3) {
-        byte WheelPos = 255 - (i+j) % 255;
-        if (WheelPos < 85) {
-          _setPixelColor(i+q, 255 - WheelPos * 3, 0, WheelPos * 3);
-        } else if (WheelPos < 170) {
-          WheelPos -= 85;
-          _setPixelColor(i+q, 0, WheelPos * 3, 255 - WheelPos * 3);
-        } else {
-          WheelPos -= 170;
-          _setPixelColor(i+q, WheelPos * 3, 255 - WheelPos * 3, 0);
-        }
-      }
+  for (uint16_t i=_startPixel; i <= _endPixel; i++) {
+    byte WheelPos = 255 - (i+j) % 255;
+    if (WheelPos < 85) {
+      _setPixelColor(i+q, 255 - WheelPos * 3, 0, WheelPos * 3);
+    } else if (WheelPos < 170) {
+      WheelPos -= 85;
+      _setPixelColor(i+q, 0, WheelPos * 3, 255 - WheelPos * 3);
+    } else {
+      WheelPos -= 170;
+      _setPixelColor(i+q, WheelPos * 3, 255 - WheelPos * 3, 0);
+    }
+  }
 
-//      for (uint16_t i=_startPixel; i < _endPixel; i=i+3) {
-//        _setPixelColor(i+q, 0);        //turn every third pixel off
-//      }
-//    }
+//  for (uint16_t i=_startPixel; i < _endPixel; i=i+3) {
+//    _setPixelColor(i+q, 0, 0, 0);        //turn every third pixel off
 //  }
 }
 
 
+<<<<<<< HEAD
 void Light::getRGB(int _hue, int _sat, int _val, int colors[3]) {
   /* convert _hue, saturation and brightness ( HSB/HSV ) to RGB
 =======
 void Light::getRGB(int hue, int sat, int val, int colors[3]) {
+=======
+//Theatre-style crawling lights with rainbow effect
+void Light::riseToRed(int j) {
+  for (uint16_t i=_startPixel; i <= _endPixel; i++) {
+    _setPixelColor(i, j, 0, 0);
+  }
+}
+
+
+
+void Light::getRGB(int _hue, int _sat, int _val, int colors[3]) {
+>>>>>>> add-timeDisplay
   /* convert hue, saturation and brightness ( HSB/HSV ) to RGB
 >>>>>>> parent of 2234290... Better dimming, clean-up, added time
      The dim_curve is used only on brightness/value and on saturation (inverted).

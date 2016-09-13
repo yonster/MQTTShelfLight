@@ -16,6 +16,7 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + 
 
 long timerTicks = 0;               // count ticks for interrupt timer
 bool startingUp = true;            // initiates startup sequence
+bool clockMode = false;
 
 // create objects
 #define LIGHT_COUNT 3
@@ -90,6 +91,8 @@ void loop() {
 void controlCallback(char *data, uint16_t len) {
   Serial.print("Received: ");
   Serial.println(data);
+  if (data == "CLOCK") { clockMode = true; }
+  
   for (int i = 0; i < LIGHT_COUNT; i++) {
     light[i].processMessage(data);
   }
@@ -105,7 +108,7 @@ void updateInterrupts() {
         light[1].theaterChaseRainbow(j, q);
         light[2].theaterChaseRainbow(j, q);
         pixels.show();
-        delay(8);
+        delay(10);
       }
     }
 
@@ -115,10 +118,10 @@ void updateInterrupts() {
       light[1].riseToRed(j);
       light[2].riseToRed(j);
       pixels.show();
-      delay(60);
+      delay(30);
     }
     startingUp = false;
-  } else if (light[2].value < 10) {
+  } else if ((light[2].value < 10) || (clockMode)) {
     // if third light at 1%, show time
     if (timerTicks++ > 1001) {
       // new NTP request every ~30 seconds

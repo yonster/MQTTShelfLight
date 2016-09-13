@@ -74,10 +74,16 @@ void Light::updateTime() {
   int currentHour = hour();
   if (currentHour > 12) { currentHour = currentHour - 12; }
 
+  // turn off all LEDs
+  for(int i=_startPixel; i<=_endPixel; i++) {
+    _setPixelColor(i, 0, 0, 0);
+  }
+
+
   for(int i=0;i<=11;i++) {
     // for 12 pixels, color them dark red, except current hour
     if (i == currentHour - 1) {
-      _setPixelColor(_endPixel - i, 0, 1, 0);
+      _setPixelColor(_endPixel - i, 2, 1, 0);
     } else {
       _setPixelColor(_endPixel - i, 1, 0, 0);
     }
@@ -89,15 +95,10 @@ void Light::updateTime() {
   for(int i=0;i<=3;i++) {
     // for 4 pixels, color them dark red, except current minute
     if (i == currentQuarter) {
-      _setPixelColor(_startPixel + i, 0, 1, 0);
+      _setPixelColor(_startPixel + i, 2, 1, 0);
     } else {
       _setPixelColor(_startPixel + i, 1, 0, 0);
     }
-  }
-
-  // turn off all other lights
-  for(int i=_startPixel + 4;i<=_endPixel - 11;i++) {
-    _setPixelColor(_startPixel + i, 0, 0, 0);
   }
 }
 

@@ -45,15 +45,18 @@ class Light : public Object {
     Light();
 //    void setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor);
     void setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor, GeneralMessageFunction callback);
-    virtual void processMessage(char *message);
+//    virtual void processMessage(char *message);
     void theaterChaseRainbow(int j, int q);
     void updateTime();
     void toggle();
+    char* status = "ON";
     int hue = 0;
     int saturation = 0;
     int value = 0;
+    char* lightIDString = "00";
     void updateValues();
-    void riseToRed(int j);
+    void setColor(int R, int G, int B);
+    bool clockMode = false;
   private:
     int hueCurrent[maxPixels];
     int satCurrent[maxPixels];
@@ -65,8 +68,6 @@ class Light : public Object {
     int _startPixel = 0;
     int _endPixel = 0;
     int _lightID;
-    char* _lightIDString = "00";
-    char* _status = "ON";
     char* constructMessage();
     void getRGB(int _hue, int _sat, int _val, int colors[3]);
     int _rgb_colors[3];

@@ -39,10 +39,6 @@ class Utilities {
   public:
     Utilities();
     void setup();
-//    void MQTT_connect();
-//    void MQTT_publish(String message);
-//    void update();
-//    void addMQTTObject(Object object);
 //    float getTime();
     void timeUpdate();
   private:

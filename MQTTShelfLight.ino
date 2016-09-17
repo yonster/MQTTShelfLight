@@ -15,8 +15,7 @@ Adafruit_MQTT_Subscribe controlFeed = Adafruit_MQTT_Subscribe(&mqtt, "steyaertHo
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 long timerTicks = 0;               // count ticks for interrupt timer
-bool startingUp = true;            // initiates startup sequence
-bool clockMode = false;
+bool rainbowMode = true;           // initiates rainbow startup sequence
 
 // create objects
 #define LIGHT_COUNT 3
@@ -84,29 +83,69 @@ void loop() {
   updateInterrupts();     // allow interrupt timer to run
 //  Serial.println("updated interrupts");
 
-//  delay(20);  // try to save battery but keep responsiveness? *** TODO: Tweak this to maximum delay while keeping responsiveness
+  delay(20);  // try to save battery but keep responsiveness? *** TODO: Tweak this to maximum delay while keeping responsiveness
 }
 
 
 void controlCallback(char *data, uint16_t len) {
   Serial.print("Received: ");
   Serial.println(data);
-  if (data == "CLOCK") { clockMode = true; }
-  
+
+  String messageString = String(data);
+  int currentLightID = -1;
+
   for (int i = 0; i < LIGHT_COUNT; i++) {
-    light[i].processMessage(data);
+    if (strncmp(data, light[i].lightIDString, 2) == 0) {   // compare first 2 chars to lightID, see if it matches
+      currentLightID = i;
+    }
   }
+
+  if (messageString.substring(3,8) == "CLOCK") {
+    light[currentLightID].clockMode = true;
+  } else if (messageString.substring(0,7) == "RAINBOW") {
+    rainbowMode = true;
+  } else if (messageString.substring(3,5) == "ON") {
+    light[currentLightID].status = "ON";
+  } else if (messageString.substring(3,6) == "OFF") {
+    light[currentLightID].status = "OFF";
+  } else if (messageString.substring(3,9) == "CHECKSTATUS") {
+    // null command to get a status returned
+  } else if (messageString.substring(3,11) == "IDENTIFY") {
+    // identify light by blinking green a few times
+    light[currentLightID].setColor(0, 255, 0);
+    for (int j=0; j<8; j++) {
+      light[currentLightID].toggle();
+      delay(500);
+    }
+  } else {
+    int _value = atoi(&data[7]);
+    if (messageString.substring(3,6) == "HUE") {
+      light[currentLightID].hue = _value;
+    } else if (messageString.substring(3,6) == "SAT") {
+      light[currentLightID].saturation = _value * 255/100;
+    } else if (messageString.substring(3,6) == "VAL") {
+      light[currentLightID].value = _value * 255/100;
+    } else if (messageString.substring(3,6) == "DIM") {
+      light[currentLightID].value -= 1;
+      if (light[currentLightID].value < 0) light[currentLightID].value = 0;
+    } else if (messageString.substring(3,9) == "BRIGHT") {
+      light[currentLightID].value += 1;
+      if (light[currentLightID].value > 100) light[currentLightID].value = 100;
+    }
+  }
+  // if this light responded to the message, update status
+  light[currentLightID].updateValues();
 }
 
 
 void updateInterrupts() {
-  if (startingUp) {
+  if (rainbowMode) {
     // show startup sequence
     for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
       for (int q=0; q < 3; q++) {
-        light[0].theaterChaseRainbow(j, q);
-        light[1].theaterChaseRainbow(j, q);
-        light[2].theaterChaseRainbow(j, q);
+        for (int i = 0; i < LIGHT_COUNT; i++) {
+          light[i].theaterChaseRainbow(j, q);
+        }
         pixels.show();
         delay(10);
       }
@@ -114,23 +153,21 @@ void updateInterrupts() {
 
     // now show red
     for (int j=0; j < 30; j++) {     // increase brightness
-      light[0].riseToRed(j);
-      light[1].riseToRed(j);
-      light[2].riseToRed(j);
+      for (int i = 0; i < LIGHT_COUNT; i++) {
+        light[i].setColor(j, 0, 0); // set as red color
+      }
       pixels.show();
       delay(30);
     }
-    startingUp = false;
-  } else if ((light[2].value < 10) || (clockMode)) {
-    // if third light at 1%, show time
-    if (timerTicks++ > 1001) {
-      // new NTP request every ~30 seconds
-      Serial.println("updating time");
-      light[2].updateTime();
-      utilities.timeUpdate();
-      timerTicks = 0;
-      pixels.show();
+    rainbowMode = false;
+  } else if (timerTicks++ > 1001) {
+    // new NTP request every ~30 seconds
+    for (int i = 0; i < LIGHT_COUNT; i++) {
+      light[i].updateTime();
     }
+    utilities.timeUpdate();
+    timerTicks = 0;
+    pixels.show();
   }
 }
 

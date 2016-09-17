@@ -33,16 +33,6 @@ void Utilities::setup() {
 //  Serial.println(udp.localPort());
 }
 
-//void Utilities::update() {
-//}
-//
-//
-//void Utilities::addMQTTObject(Object object) {
-//  objects[objectCount++] = object;
-////  object.setCallback(MQTT_publish);
-////  bedroomLightsControlFeed.setCallback(object.tempCallback);
-//  Serial.println("added");
-//}
 
 void Utilities::timeUpdate() {
 //  if (timeStatus() != timeNotSet) {

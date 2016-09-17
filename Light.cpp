@@ -19,13 +19,13 @@ Light::Light() {
 }
 
 //void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor) {
-void Light::setup(int startPixel, int endPixel, int lightID, char* lightIDString, GeneralNeoPixelFunction setPixelColor, GeneralMessageFunction callback) {
+void Light::setup(int startPixel, int endPixel, int lightID, char* _lightIDString, GeneralNeoPixelFunction setPixelColor, GeneralMessageFunction callback) {
   _startPixel = startPixel;
   _endPixel = endPixel;
   _lightID = lightID;
   _setPixelColor = setPixelColor;
   _callback = callback;
-  _lightIDString= lightIDString;
+  lightIDString = _lightIDString;
 
 
 //  for {i=_startPixel; i<= _endPixel; i++) {
@@ -52,7 +52,7 @@ void Light::updateValues() {
 
   getRGB(hue, saturation, value, _rgb_colors);   // converts HSB to RGB
 
-  if (_status == "ON") {
+  if (status == "ON") {
     for(int i=_startPixel;i<=_endPixel;i++) {
       _setPixelColor(i, _rgb_colors[0], _rgb_colors[1], _rgb_colors[2]);
     }
@@ -63,98 +63,50 @@ void Light::updateValues() {
   }
 
   // set updated status
-  _callback(String(_lightIDString)+":"+String(_status)+":"+String(value)+":"+String(hue)+":"+String(saturation));
+  _callback(String(lightIDString)+":"+String(status)+":"+String(value)+":"+String(hue)+":"+String(saturation));
 }
 
 void Light::updateTime() {
-  // update time display
-
-  // turn off all LEDs
-  for(int i=_startPixel; i<=_endPixel; i++) {
-    _setPixelColor(i, 0, 0, 0);
-  }
-
-	// time hours
- int currentHour = hour();
- if (currentHour > 12) { currentHour =- 12; }
- 
-  for(int i=0;i<=11;i++) {
-    // for 12 pixels, color them dark red, except current hour
-    if (i == currentHour - 1) {
-      _setPixelColor(_endPixel - i, 2, 1, 0);
-    } else {
-      _setPixelColor(_endPixel - i, 1, 0, 0);
+  if (clockMode) {
+    // update time display
+    // turn off all LEDs
+    for(int i=_startPixel; i<=_endPixel; i++) {
+      _setPixelColor(i, 0, 0, 0);
     }
-  }
-
-  // time minutes
-//  _callback(String(_lightIDString)+":"+String(_status)+":"+String(_value)+":"+String(_hue)+":"+String(_saturation));
-  int currentQuarter = 3 - floor(minute()/15);  // calculate current quarter hour 0 -> 3, reversed
   
-  for(int i=0;i<=3;i++) {
-    // for 4 pixels, color them dark red, except current minute
-    if (i == currentQuarter) {
-      _setPixelColor(_startPixel + i, 2, 1, 0);
-    } else {
-      _setPixelColor(_startPixel + i, 1, 0, 0);
+  	// time hours
+   int currentHour = hour();
+   if (currentHour > 12) { currentHour =- 12; }
+   
+    for(int i=0;i<=11;i++) {
+      // for 12 pixels, color them dark red, except current hour
+      if (i == currentHour - 1) {
+        _setPixelColor(_endPixel - i, 2, 0, 0);
+      } else {
+        _setPixelColor(_endPixel - i, 1, 0, 0);
+      }
+    }
+  
+    // time minutes
+    int currentQuarter = 3 - floor(minute()/15);  // calculate current quarter hour 0 -> 3, reversed
+    
+    for(int i=0;i<=3;i++) {
+      // for 4 pixels, color them dark red, except current minute
+      if (i == currentQuarter) {
+        _setPixelColor(_startPixel + i, 2, 0, 0);
+      } else {
+        _setPixelColor(_startPixel + i, 1, 0, 0);
+      }
     }
   }
 }
 
-void Light::processMessage(char *message) {
-  // message commands come in as:
-  // ID:FXN:VAL
-  // Light ID (00-99): Function (ON|OFF|HUE|SAT|VAL): Value (0-360)
-  // eg. 01:HUE:320
-
-  if (strncmp(message, _lightIDString, 2) == 0) {   // compare first 2 chars to lightID
-    // if matches our ID, process request
-    String messageString = String(message);
-
-    if (messageString.substring(3,5) == "ON") {
-      _status = "ON";
-    } else if (messageString.substring(3,6) == "OFF") {
-      _status = "OFF";
-    } else if (messageString.substring(3,9) == "CHECKSTATUS") {
-      // null command to get a status returned
-    } else if (messageString.substring(3,11) == "IDENTIFY") {
-      // identify the light by blinking green a few times
-      for (int j=0; j<4; j++) {
-        for(int i=_startPixel;i<=_endPixel;i++) {
-          _setPixelColor(i, 0, 255, 0);
-        }
-        delay(500);
-        for(int i=_startPixel;i<=_endPixel;i++) {
-          _setPixelColor(i, 0, 0, 0);
-        }
-        delay(500);
-      }
-    } else {
-      int _value = atoi(&message[7]);
-      if (messageString.substring(3,6) == "HUE") {
-        hue = _value;
-      } else if (messageString.substring(3,6) == "SAT") {
-        saturation = _value * 255/100;
-      } else if (messageString.substring(3,6) == "VAL") {
-        value = _value * 255/100;
-      } else if (messageString.substring(3,6) == "DIM") {
-        value -= 1;
-        if (value < 0) value = 0;
-      } else if (messageString.substring(3,9) == "BRIGHT") {
-        value += 1;
-        if (value > 100) value = 100;
-      }
-    }
-    // if this light responded to the message, update status
-    updateValues();
-  }
-}
 
 void Light::toggle() {
-  if (_status == "ON") {
-    _status = "OFF";
+  if (status == "ON") {
+    status = "OFF";
   } else {
-    _status = "ON";
+    status = "ON";
   }
   updateValues();
 }
@@ -174,16 +126,12 @@ void Light::theaterChaseRainbow(int j, int q) {
       _setPixelColor(i+q, WheelPos * 3, 255 - WheelPos * 3, 0);
     }
   }
-
-//  for (uint16_t i=_startPixel; i < _endPixel; i=i+3) {
-//    _setPixelColor(i+q, 0, 0, 0);        //turn every third pixel off
-//  }
 }
 
 
-void Light::riseToRed(int j) {
+void Light::setColor(int R, int G, int B) {
   for (uint16_t i=_startPixel; i <= _endPixel; i++) {
-    _setPixelColor(i, j, 0, 0);
+    _setPixelColor(i, R, G, B);
   }
 }
 

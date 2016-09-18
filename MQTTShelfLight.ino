@@ -11,11 +11,15 @@ Adafruit_MQTT_Subscribe controlFeed = Adafruit_MQTT_Subscribe(&mqtt, "steyaertHo
 
 // pinouts availbale 0 2 4 5 12 13 14 15 16
 #define NEOPIXEL_PIN   12
-#define NUMPIXELS      59
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+#define NUMPIXELS      144
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRBW + NEO_KHZ800);
 
-long timerTicks = 0;               // count ticks for interrupt timer
-bool rainbowMode = true;           // initiates rainbow startup sequence
+long timerTicks = 0;        // count ticks for interrupt timer
+bool normalMode = false;   // trigger rainbow
+bool rainbowMode = false;   // trigger rainbow
+bool sunriseMode = false;   // trigger sunrise
+bool partyMode   = false;   // trigger party
+bool fadeRed     = false;   // fade up to red 
 
 // create objects
 #define LIGHT_COUNT 3
@@ -48,9 +52,9 @@ void setup() {
   mqtt.subscribe(&controlFeed);
 
   // set up lights
-  light[0].setup( 0, 19, 0, "01", setPixelColor, MQTT_publish);
-  light[1].setup(20, 38, 1, "02", setPixelColor, MQTT_publish);
-  light[2].setup(39, 58, 2, "03", setPixelColor, MQTT_publish);
+  light[0].setup( 0, 45, 0, "01", setPixelColor, MQTT_publish);
+  light[1].setup(46, 92, 1, "02", setPixelColor, MQTT_publish);
+  light[2].setup(93, 140, 2, "03", setPixelColor, MQTT_publish);
 
   pixels.begin();  // This initializes the NeoPixel library.
   pixels.show();   // Initialize all pixels to 'off'
@@ -63,12 +67,13 @@ void setup() {
   Serial.println(Udp.localPort());
   Serial.println("waiting for sync");
   setSyncProvider(getNtpTime);
+  setNormal();
   Serial.println("setup complete");
 }
 
 
-void setPixelColor (int number, int red, int green, int blue) {
-  pixels.setPixelColor(number, pixels.Color(red, green, blue));
+void setPixelColor (int number, int red, int green, int blue, int white) {
+  pixels.setPixelColor(number, pixels.Color(red, green, blue, white));
 }
 
 
@@ -91,6 +96,13 @@ void controlCallback(char *data, uint16_t len) {
   Serial.print("Received: ");
   Serial.println(data);
 
+  // reset modes
+  normalMode  = true;
+  rainbowMode = false;
+  sunriseMode = false;
+  partyMode   = false;
+  fadeRed     = false;
+
   String messageString = String(data);
   int currentLightID = -1;
 
@@ -100,10 +112,22 @@ void controlCallback(char *data, uint16_t len) {
     }
   }
 
-  if (messageString.substring(3,8) == "CLOCK") {
-    light[currentLightID].clockMode = true;
+  if (messageString.substring(0,5) == "CLOCK") {
+    light[2].clockMode = true;
+    showClock();
+  } else if (messageString.substring(0,6) == "NORMAL") {
+    for (int i = 0; i < LIGHT_COUNT; i++) {
+      light[i].clockMode = false;
+    }
+    setNormal();
   } else if (messageString.substring(0,7) == "RAINBOW") {
     rainbowMode = true;
+  } else if (messageString.substring(0,7) == "SUNRISE") {
+    sunriseMode = true;
+  } else if (messageString.substring(0,5) == "PARTY") {
+    partyMode = true;
+  } else if (messageString.substring(0,5) == "WAKE") {
+    fadeRed = true;
   } else if (messageString.substring(3,5) == "ON") {
     light[currentLightID].status = "ON";
   } else if (messageString.substring(3,6) == "OFF") {
@@ -112,7 +136,7 @@ void controlCallback(char *data, uint16_t len) {
     // null command to get a status returned
   } else if (messageString.substring(3,11) == "IDENTIFY") {
     // identify light by blinking green a few times
-    light[currentLightID].setColor(0, 255, 0);
+    light[currentLightID].setColor(0, 255, 0, 10);
     for (int j=0; j<8; j++) {
       light[currentLightID].toggle();
       delay(500);
@@ -134,13 +158,22 @@ void controlCallback(char *data, uint16_t len) {
     }
   }
   // if this light responded to the message, update status
-  light[currentLightID].updateValues();
+  if (currentLightID >= 0) light[currentLightID].updateValues();
+}
+
+
+void setNormal() {
+  light[0].setColor(0, 0, 0, 40); // set as white color
+  light[1].setColor(128, 0, 0, 20); // set as red color
+  light[2].setColor(0, 0, 0, 40); // set as white color
+  for (int i = 0; i < LIGHT_COUNT; i++) {
+    light[i].updateValues();
+  }
 }
 
 
 void updateInterrupts() {
   if (rainbowMode) {
-    // show startup sequence
     for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
       for (int q=0; q < 3; q++) {
         for (int i = 0; i < LIGHT_COUNT; i++) {
@@ -150,25 +183,50 @@ void updateInterrupts() {
         delay(10);
       }
     }
-
-    // now show red
+  } else if (sunriseMode) {
+    for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+      for (int q=0; q < 3; q++) {
+        for (int i = 0; i < LIGHT_COUNT; i++) {
+          light[i].theaterChaseRainbow(j, q);
+        }
+        pixels.show();
+        delay(10);
+      }
+    }
+  } else if (partyMode) {
+    for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+      for (int q=0; q < 3; q++) {
+        for (int i = 0; i < LIGHT_COUNT; i++) {
+          light[i].theaterChaseRainbow(j, q);
+        }
+        pixels.show();
+        delay(10);
+      }
+    }
+  } else if (fadeRed) {
+    // fade up red
     for (int j=0; j < 30; j++) {     // increase brightness
       for (int i = 0; i < LIGHT_COUNT; i++) {
-        light[i].setColor(j, 0, 0); // set as red color
+        light[i].setColor(j, 0, 0, 0); // set as red color
       }
       pixels.show();
       delay(30);
     }
-    rainbowMode = false;
+    fadeRed = false;
   } else if (timerTicks++ > 1001) {
-    // new NTP request every ~30 seconds
-    for (int i = 0; i < LIGHT_COUNT; i++) {
-      light[i].updateTime();
-    }
-    utilities.timeUpdate();
-    timerTicks = 0;
-    pixels.show();
+    showClock();
   }
+}
+
+
+void showClock() {
+  // new NTP request every ~30 seconds
+  for (int i = 0; i < LIGHT_COUNT; i++) {
+    light[i].updateTime();
+  }
+  utilities.timeUpdate();
+  timerTicks = 0;
+  pixels.show();
 }
 
 

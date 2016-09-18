@@ -9,9 +9,9 @@
 #include "Object.h"
 #include <Adafruit_NeoPixel.h>
 
-#define maxPixels 20
+#define maxPixels 48
 
-typedef void (*GeneralNeoPixelFunction) (int number, int red, int green, int blue);
+typedef void (*GeneralNeoPixelFunction) (int number, int red, int green, int blue, int white);
 
 /*
   dim_curve 'lookup table' to compensate for the nonlinearity of human vision.
@@ -55,7 +55,7 @@ class Light : public Object {
     int value = 0;
     char* lightIDString = "00";
     void updateValues();
-    void setColor(int R, int G, int B);
+    void setColor(int R, int G, int B, int W);
     bool clockMode = false;
   private:
     int hueCurrent[maxPixels];
@@ -69,8 +69,8 @@ class Light : public Object {
     int _endPixel = 0;
     int _lightID;
     char* constructMessage();
-    void getRGB(int _hue, int _sat, int _val, int colors[3]);
-    int _rgb_colors[3];
+    void getRGB(int _hue, int _sat, int _val, int colors[4]);
+    int _rgb_colors[4];
     Utilities utilities;
     GeneralNeoPixelFunction _setPixelColor;
     GeneralMessageFunction _callback;

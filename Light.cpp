@@ -54,11 +54,11 @@ void Light::updateValues() {
 
   if (status == "ON") {
     for(int i=_startPixel;i<=_endPixel;i++) {
-      _setPixelColor(i, _rgb_colors[0], _rgb_colors[1], _rgb_colors[2]);
+      _setPixelColor(i, _rgb_colors[0], _rgb_colors[1], _rgb_colors[2], _rgb_colors[3]);  ////// <<<<<<<< update for WHITE
     }
   } else {
     for(int i=_startPixel;i<=_endPixel;i++) {
-      _setPixelColor(i, 0, 0, 0);
+      _setPixelColor(i, 0, 0, 0, 0);
     }
   }
 
@@ -71,7 +71,7 @@ void Light::updateTime() {
     // update time display
     // turn off all LEDs
     for(int i=_startPixel; i<=_endPixel; i++) {
-      _setPixelColor(i, 0, 0, 0);
+      _setPixelColor(i, 0, 0, 0, 0);
     }
   
   	// time hours
@@ -81,9 +81,9 @@ void Light::updateTime() {
     for(int i=0;i<=11;i++) {
       // for 12 pixels, color them dark red, except current hour
       if (i == currentHour - 1) {
-        _setPixelColor(_endPixel - i, 2, 0, 0);
+        _setPixelColor(_endPixel - i, 2, 0, 0, 0);
       } else {
-        _setPixelColor(_endPixel - i, 1, 0, 0);
+        _setPixelColor(_endPixel - i, 1, 0, 0, 0);
       }
     }
   
@@ -93,9 +93,9 @@ void Light::updateTime() {
     for(int i=0;i<=3;i++) {
       // for 4 pixels, color them dark red, except current minute
       if (i == currentQuarter) {
-        _setPixelColor(_startPixel + i, 2, 0, 0);
+        _setPixelColor(_startPixel + i, 2, 0, 0, 0);
       } else {
-        _setPixelColor(_startPixel + i, 1, 0, 0);
+        _setPixelColor(_startPixel + i, 1, 0, 0, 0);
       }
     }
   }
@@ -117,22 +117,25 @@ void Light::theaterChaseRainbow(int j, int q) {
   for (uint16_t i=_startPixel; i <= _endPixel; i++) {
     byte WheelPos = 255 - (i+j) % 255;
     if (WheelPos < 85) {
-      _setPixelColor(i+q, 255 - WheelPos * 3, 0, WheelPos * 3);
+      _setPixelColor(i+q, 255 - WheelPos * 3, 0, WheelPos * 3, 0);
     } else if (WheelPos < 170) {
       WheelPos -= 85;
-      _setPixelColor(i+q, 0, WheelPos * 3, 255 - WheelPos * 3);
+      _setPixelColor(i+q, 0, WheelPos * 3, 255 - WheelPos * 3, 0);
     } else {
       WheelPos -= 170;
-      _setPixelColor(i+q, WheelPos * 3, 255 - WheelPos * 3, 0);
+      _setPixelColor(i+q, WheelPos * 3, 255 - WheelPos * 3, 0, 0);
     }
   }
 }
 
 
-void Light::setColor(int R, int G, int B) {
+void Light::setColor(int R, int G, int B, int W) {
   for (uint16_t i=_startPixel; i <= _endPixel; i++) {
-    _setPixelColor(i, R, G, B);
+    _setPixelColor(i, R, G, B, W);
   }
+  hue = 0;
+  saturation = 0;
+  value = W;
 }
 
 
@@ -155,6 +158,7 @@ void Light::getRGB(int _hue, int _sat, int _val, int colors[3]) {
     colors[0]=_val;
     colors[1]=_val;
     colors[2]=_val;
+    colors[3]=_val;
   } else  {
 
     base = ((255 - _sat) * _val)>>8;
@@ -200,5 +204,6 @@ void Light::getRGB(int _hue, int _sat, int _val, int colors[3]) {
     colors[0]=r;
     colors[1]=g;
     colors[2]=b;
+    colors[3]=_val;
   }
 }
